@@ -1,0 +1,74 @@
+
+# Configuration File for Fine-Tuning LLaMA 3.1
+project:
+  name: finetune_llama  # W&B project name
+  seed: 3407  # Random seed for reproducibility
+
+model:
+  pretrained_model: "meta-llama/Meta-Llama-3.1-8B"  # Model to fine-tune
+  output_dir: "outputs_llama"  # Directory to save model outputs
+  quantization:
+    load_in_8bit: true  # Enable 8-bit quantization
+  device_map: "auto"  # Automatically map devices
+  special_tokens:
+    pad_token: "<|finetune_right_pad_id|>"  # Custom pad token
+    eos_token: "<|endoftext|>"  # EOS token
+
+tokenizer:
+  add_special_tokens: true  # Whether to add custom special tokens
+
+dataset:
+  train: "barbaroo/Sprotin_parallel"  # Training dataset
+  train_split: "train"
+  val: "barbaroo/Sprotin_parallel"  # Validation dataset
+  val_split: "test"
+  max_seq_length: 2048  # Maximum sequence length
+
+training:
+  epochs: 3  # Number of training epochs
+  batch_size: 2  # Batch size per device
+  gradient_accumulation_steps: 4  # Steps for gradient accumulation
+  logging_steps: 500  # Steps between logging events
+  eval_strategy: "steps"  # Evaluation strategy
+  eval_steps: 1000  # Steps between evaluations
+  save_steps: 1000  # Steps between saving checkpoints
+  warmup_steps: 5  # Warmup steps for scheduler
+  lr_scheduler: "linear"  # Learning rate scheduler
+  weight_decay: 0.01  # Weight decay for optimization
+  learning_rate: 2e-4  # Learning rate
+  report_to: "wandb"  # Reporting tool for metrics
+
+peft:
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  lora_r: 16  # LoRA rank
+  lora_alpha: 16  # LoRA alpha
+  lora_dropout: 0.05  # LoRA dropout rate
+  bias: "none"  # Bias type
+  task_type: "CAUSAL_LM"  # Task type
+
+prompt:
+  template: |
+    ### Instruction:
+    {}
+
+    ### Input:
+    {}
+
+    ### Response:
+    {}
+  instruction: "Translate this sentence from English to Faroese:"
+
+logging:
+  wandb:
+    project: "finetune_llama"
+    config:
+      learning_rate: 2e-4
+      batch_size: 2
+      gradient_accumulation_steps: 4

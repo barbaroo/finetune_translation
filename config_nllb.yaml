@@ -1,0 +1,59 @@
+
+# Configuration File for Seq2Seq Translation Fine-Tuning
+project:
+  name: translation_project_EntoFo  # W&B project name
+  seed: 42  # Random seed for reproducibility
+
+model:
+  checkpoint: "facebook/nllb-200-distilled-600M"  # Model checkpoint to fine-tune
+  output_dir: "nllb_200_ENtoFO_bsz_64_epochs_10_lr0.0001"  # Output directory for saving model
+  src_lang: "eng_Latn"  # Source language tokenizer
+  tgt_lang: "fao_Latn"  # Target language tokenizer
+
+tokenizer:
+  model_max_length: 512  # Maximum sequence length for tokenization
+  padding: "max_length"  # Padding strategy
+
+dataset:
+  train:
+    - "barbaroo/fo_en_synthetic"
+    - "barbaroo/Sprotin_parallel"
+  val: 
+    - "barbaroo/Sprotin_parallel"
+    - "facebook/flores:fao_Latn-eng_Latn"
+  test: 
+    - "facebook/flores:fao_Latn-eng_Latn"
+
+training:
+  epochs: 10  # Number of training epochs
+  batch_size: 2  # Batch size per device
+  gradient_accumulation_steps: 32  # Gradient accumulation steps
+  eval_steps: 500  # Steps between evaluations
+  save_steps: 1500  # Steps between saving checkpoints
+  warmup_steps: 500  # Warmup steps for scheduler
+  learning_rate: 1e-4  # Learning rate
+  fp16: false  # Whether to use mixed precision training
+  load_best_model_at_end: true  # Load best model at the end of training
+  metric_for_best_model: "eval_loss"  # Metric used for selecting the best model
+  greater_is_better: false  # Whether higher values are better for the metric
+
+evaluation:
+  metrics:
+    - "sacrebleu"
+    - "chrf"
+
+logging:
+  wandb:
+    project: "translation_project_EntoFo"
+    config:
+      learning_rate: 1e-4
+      batch_size: 2
+      gradient_accumulation_steps: 32
+
+collator:
+  type: "DataCollatorForSeq2Seq"
+
+early_stopping:
+  enabled: false  # Set to true to enable early stopping
+  patience: 3  # Number of checks with no improvement after which training stops
+  threshold: 0.01  # Minimum improvement to reset patience

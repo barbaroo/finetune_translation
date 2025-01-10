@@ -1,0 +1,67 @@
+
+# Configuration File for Fine-Tuning GPT-SW3
+project:
+  name: finetune_gptsw3  # W&B project name
+  seed: 3407  # Random seed for reproducibility
+
+model:
+  pretrained_model: "AI-Sweden-Models/gpt-sw3-6.7b-v2"  # Model to fine-tune
+  output_dir: "outputs_gptsw3_2"  # Directory to save model outputs
+  quantization:
+    load_in_8bit: true  # Enable 8-bit quantization
+  device_map: "auto"  # Automatically map devices
+
+tokenizer:
+  eos_token: "<|endoftext|>"  # Ensure EOS token is used correctly
+
+dataset:
+  train: "barbaroo/Sprotin_parallel"  # Training dataset
+  train_split: "train"
+  val: "barbaroo/Sprotin_parallel"  # Validation dataset
+  val_split: "test"
+
+training:
+  epochs: 3  # Number of training epochs
+  batch_size: 2  # Batch size per device
+  gradient_accumulation_steps: 4  # Steps for gradient accumulation
+  max_seq_length: 2048  # Maximum sequence length
+  learning_rate: 2e-4  # Learning rate
+  warmup_steps: 5  # Warmup steps for scheduler
+  weight_decay: 0.01  # Weight decay for optimization
+  logging_steps: 100  # Steps between logging events
+  eval_strategy: "steps"  # Evaluation strategy
+  eval_steps: 500  # Steps between evaluations
+  save_steps: 1000  # Steps between saving checkpoints
+  lr_scheduler: "linear"  # Learning rate scheduler
+  report_to: "wandb"  # Reporting tool for metrics
+
+peft:
+  target_modules:
+    - "c_attn"
+    - "c_proj"
+    - "c_fc"
+  lora_r: 16  # LoRA rank
+  lora_alpha: 16  # LoRA alpha
+  lora_dropout: 0.05  # LoRA dropout rate
+  bias: "none"  # Bias type
+  task_type: "CAUSAL_LM"  # Task type
+
+prompt:
+  template: |
+    ### Instruction:
+    {}
+
+    ### Input:
+    {}
+
+    ### Response:
+    {}
+  instruction: "Translate this sentence from English to Faroese:"
+
+logging:
+  wandb:
+    project: "finetune_gptsw3"
+    config:
+      learning_rate: 2e-4
+      batch_size: 2
+      gradient_accumulation_steps: 4
